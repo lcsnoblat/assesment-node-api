@@ -20,7 +20,8 @@ var UserSchema = new Schema({
     match: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
   },
   firstName: {type: String},
-  lastName: {type: String}
+  lastName: {type: String},
+  password: {type: String}
 });
 
 mongoose.model('User', UserSchema);
@@ -48,12 +49,13 @@ var createUser = function (req, res, next) {
   });
 };
 
-var updateUser = function (req, res, next) {
-  User.findByIdAndUpdate(req.body._id, req.body, {new: true}, function (err, user) {
+var getByEmail = function (req, res, next) {
+  User.findOne({'email': req.body.email, 'password': req.body.password}, function (err, user) {
+    console.log(req.body)
     if (err) {
       next(err);
     } else {
-      res.json(user);
+      res.json(user)
     }
   });
 };
@@ -82,8 +84,8 @@ var getOneUser = function (req, res) {
   res.json(req.user);
 };
 
-var getByIdUser = function (req, res, next, id) {
-  User.findOne({_id: id}, function (err, user) {
+var getByIdUser = function (req, res, next, firstName) {
+  User.findOne({firstName: firstName}, function (err, user) {
     if (err) {
       next(err);
     } else {
@@ -94,14 +96,11 @@ var getByIdUser = function (req, res, next, id) {
 };
 
 router.route('/users')
-  .post(createUser)
+  .post(getByEmail)
   .get(getAllUsers);
-
-  
 
 router.route('/users/:userId')
   .get(getOneUser)
-  .put(updateUser)
   .delete(deleteUser);
 
 router.param('userId', getByIdUser);
@@ -109,5 +108,6 @@ router.param('userId', getByIdUser);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/v1', router);
 
-app.listen(9090);
+const PORT = process.env.PORT || 9090;
+app.listen(PORT);
 module.exports = app;
